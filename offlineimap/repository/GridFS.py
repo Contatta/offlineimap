@@ -46,7 +46,11 @@ class GridFSRepository(BaseRepository):
         if (not self._db[self.getCollectionName()]):
             self._db.create_collection(self.getCollectionName())
 
+        #: :type: Collection
         self._files = self._db[self.getCollectionName()].files
+        self._files.ensure_index('accountname')
+        self._files.ensure_index('uid')
+
         self._gfs = GridFS(self._db, self.getCollectionName())
 
     def connect(self):
