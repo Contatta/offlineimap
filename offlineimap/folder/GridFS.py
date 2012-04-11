@@ -127,7 +127,8 @@ class GridFSFolder(BaseFolder):
             }
         }
 
-        self._gfs.put(content, **obj)
+        id = self._gfs.put(content, **obj)
+        self.messagelist[uid] = { 'flags': flags, '_id' : id }
 
         self.ui.debug('gridfs', 'savemessage: returning uid %d' % uid)
 
