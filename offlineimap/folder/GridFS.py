@@ -24,9 +24,9 @@
 from .Base import BaseFolder
 from pymongo import *
 from gridfs import GridFS
-import email
 from email.parser import Parser
 import dateutil.parser
+import email
 
 class GridFSFolder(BaseFolder):
     def __init__(self, db, gfs, files, name, repository):
@@ -79,6 +79,10 @@ class GridFSFolder(BaseFolder):
         file = self._gfs.get_last_version(uid=uid)
         return file.upload_date
 
+    def addressToList(self, address):
+        addresslist = email.utils.getaddresses([address])
+        return [{ 'displayName': i[0], 'email': i[1]} for i in addresslist]
+
     def savemessage(self, uid, content, flags, rtime):
 
         self.ui.savemessage('gridfs', uid, flags, self)
@@ -94,11 +98,13 @@ class GridFSFolder(BaseFolder):
 
         #: @type: email.Message
         msg = Parser().parsestr(content, headersonly=True)
-        sender = email.utils.parseaddr(msg['From'])
+        fromAddress = self.addressToList(msg['From'])[0]
+        toAddress = self.addressToList(msg['To'])
+        if msg.has_key('CC'):
+            ccAddress = self.addressToList(msg['CC'])
+        else:
+            ccAddress = None
 
-        #: @type: str
-        to = msg['To']
-        to=to.split('\n')
         sent = msg['Date']
         sent = dateutil.parser.parse(sent)
 
@@ -114,8 +120,10 @@ class GridFSFolder(BaseFolder):
             # mail specific metadata
             'mailHeaders' : {
                 'subject': msg['Subject'],
-                'from': sender[1],
-                'date': sent
+                'from': fromAddress,
+                'date': sent,
+                'to': toAddress,
+                'cc': ccAddress
             }
         }
 

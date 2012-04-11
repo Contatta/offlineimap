@@ -21,7 +21,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from offlineimap import folder
 from offlineimap.ui import getglobalui
 from offlineimap.error import OfflineImapError
 from offlineimap.repository.Base import BaseRepository
@@ -54,6 +53,9 @@ class GridFSRepository(BaseRepository):
     def getsep(self):
         return self.getconf('sep', '.').strip()
 
+    def getNamespacePrefix(self):
+        return self.getconf('prefix', 'mail').strip()
+
     def gethost(self):
         if self._host:
             return self._host
@@ -83,7 +85,7 @@ class GridFSRepository(BaseRepository):
                                OfflineImapError.ERROR.REPO)
 
     def getCollectionName(self):
-        return self.accountname
+        return self.getNamespacePrefix()
 
     def deletefolder(self, foldername):
         self.ui.warn("NOT YET IMPLEMENTED: DELETE FOLDER %s" % foldername)
