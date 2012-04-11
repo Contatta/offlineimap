@@ -32,14 +32,16 @@ class GridFSRepository(BaseRepository):
     def __init__(self, reposname, account):
         BaseRepository.__init__(self, reposname, account)
 
-        self._host = None
         self._dbName = None
+        self._uri = None
 
         self.folders = None
         self.ui = getglobalui()
         self.debug("GridFSRepository initialized, sep is " + repr(self.getsep()))
         self.host = self.config
-        self._cn = Connection(self.gethost())
+        self._cn = Connection(self.geturi())
+        info = self._cn.server_info()
+
         self._db = self._cn[self.getdb()]
         if (not self._db[self.getCollectionName()]):
             self._db.create_collection(self.getCollectionName())
@@ -56,19 +58,20 @@ class GridFSRepository(BaseRepository):
     def getNamespacePrefix(self):
         return self.getconf('prefix', 'mail').strip()
 
-    def gethost(self):
-        if self._host:
-            return self._host
+    def geturi(self):
+        if self._uri:
+            return self._uri
 
-        host = self.getconf('remotehost', None)
-        if host != None:
-            self._host = host
-            return self._host
+        uri = self.getconf('uri', None)
+        if uri is not None:
+            self._uri = uri
+            return self._uri
 
         # no success
-        raise OfflineImapError("No remote host for repository "\
+        raise OfflineImapError("No uri specified for repository "\
                                    "'%s' specified." % self,
                                OfflineImapError.ERROR.REPO)
+
 
     def getdb(self):
         if self._dbName:
