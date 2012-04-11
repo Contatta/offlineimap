@@ -19,6 +19,7 @@ from offlineimap.repository.IMAP import IMAPRepository, MappedIMAPRepository
 from offlineimap.repository.Gmail import GmailRepository
 from offlineimap.repository.Maildir import MaildirRepository
 from offlineimap.repository.LocalStatus import LocalStatusRepository
+from offlineimap.repository.GridFS import GridFSRepository
 
 class Repository(object):
     """Abstract class that returns the correct Repository type
@@ -39,7 +40,8 @@ class Repository(object):
         elif reqtype == 'local':
             name = account.getconf('localrepository')
             typemap = {'IMAP': MappedIMAPRepository,
-                       'Maildir': MaildirRepository}
+                       'Maildir': MaildirRepository,
+                       'GridFS': GridFSRepository}
 
         elif reqtype == 'status':
             # create and return a LocalStatusRepository

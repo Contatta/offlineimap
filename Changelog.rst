@@ -11,6 +11,8 @@ WIP (add new stuff for the next release)
 New Features
 ------------
 
+* Support for GridFS / mongodb as a local storage
+
 Changes
 -------
 

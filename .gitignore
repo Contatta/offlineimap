@@ -8,3 +8,7 @@ offlineimap.1
 .*.swo
 *.html
 *~
+
+.idea/
+contatta.conf
+stuart.conf
