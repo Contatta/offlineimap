@@ -50,6 +50,7 @@ class GridFSRepository(BaseRepository):
         self._files = self._db[self.getCollectionName()].files
         self._files.ensure_index('accountname')
         self._files.ensure_index('uid')
+        self._files.ensure_index('type')
 
         self._gfs = GridFS(self._db, self.getCollectionName())
 
