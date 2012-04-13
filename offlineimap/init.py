@@ -28,6 +28,8 @@ from offlineimap import accounts, threadutil, syncmaster
 from offlineimap.error import OfflineImapError
 from offlineimap.ui import UI_LIST, setglobalui, getglobalui
 from offlineimap.CustomConfig import CustomConfigParser
+from urlparse import urlparse
+import os.path
 
 
 class OfflineImap:
@@ -100,8 +102,10 @@ class OfflineImap:
 
         parser.add_option("-c", dest="configfile", metavar="FILE",
                   default="~/.offlineimaprc",
-                  help="Specifies a configuration file to use in lieu of "
-                       "%default.")
+                  help="Specifies a configuration file to use in lieu of '%default'.\n"
+                "Configuration files stored in MongoDB are supported via the "
+                "following URI syntax:\n"
+                "mongodb://user:pass@server:port/db/bucket/file.conf")
 
         parser.add_option("-d", dest="debugtype", metavar="type1,[type2...]",
                   help="Enables debugging for OfflineIMAP. This is useful "
@@ -162,15 +166,47 @@ class OfflineImap:
         (options, args) = parser.parse_args()
 
         #read in configuration file
+
+        #: :type: string
         configfilename = os.path.expanduser(options.configfile)
+        url = urlparse(configfilename)
 
         config = CustomConfigParser()
-        if not os.path.exists(configfilename):
-            # TODO, initialize and make use of chosen ui for logging
-            logging.error(" *** Config file '%s' does not exist; aborting!" %
-                          configfilename)
-            sys.exit(1)
-        config.read(configfilename)
+
+        # connect to gridfs
+        if url.scheme == 'mongodb':
+            try:
+                from gridfs import GridFS
+                from pymongo import Connection
+            except ImportError:
+                logging.error(" *** pymongo must be installed to use mongodb as configuration source; aborting!")
+                sys.exit(1)
+
+            path = url.path
+            (path, filename) = os.path.split(path)
+            (db, collection) = os.path.split(path)
+            db_name = os.path.basename(db)
+
+            mongo_uri = ''.join([url[0], '://', url[1], db])
+            mongodb = Connection(mongo_uri)
+            gfs = GridFS(mongodb[db_name], collection)
+
+            if not gfs.exists(filename=filename):
+                logging.error(" *** Config file '%s' does not exist; aborting!" %
+                              url.geturl())
+                sys.exit(1)
+
+            file = gfs.get_last_version(filename)
+            config.readfp(file)
+
+        else:
+            if not os.path.exists(configfilename):
+                # TODO, initialize and make use of chosen ui for logging
+                logging.error(" *** Config file '%s' does not exist; aborting!" %
+                              configfilename)
+                sys.exit(1)
+            config.read(configfilename)
+
 
         #profile mode chosen?
         if options.profiledir:
