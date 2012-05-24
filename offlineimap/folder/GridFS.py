@@ -22,8 +22,6 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from .Base import BaseFolder
-from pymongo import *
-from gridfs import GridFS
 from email.parser import Parser
 import dateutil.parser
 import email
@@ -99,7 +97,12 @@ class GridFSFolder(BaseFolder):
         #: @type: email.Message
         msg = Parser().parsestr(content, headersonly=True)
         fromAddress = self.addressToList(msg['From'])[0]
-        toAddress = self.addressToList(msg['To'])
+
+        if (msg.has_key('To') and msg['To'] is not None):
+            toAddress = self.addressToList(msg['To'])
+        else:
+            toAddress = None
+
         if msg.has_key('CC'):
             ccAddress = self.addressToList(msg['CC'])
         else:
