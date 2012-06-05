@@ -25,6 +25,7 @@ from .Base import BaseFolder
 from email.parser import Parser
 import dateutil.parser
 import email
+import time
 
 class GridFSFolder(BaseFolder):
     def __init__(self, db, gfs, files, name, repository):
@@ -75,7 +76,7 @@ class GridFSFolder(BaseFolder):
 
     def getmessagetime(self, uid):
         file = self._gfs.get_last_version(uid=uid)
-        return file.upload_date
+        return time.mktime(file.upload_date.timetuple())
 
     def addressToList(self, address):
         addresslist = email.utils.getaddresses([address])
