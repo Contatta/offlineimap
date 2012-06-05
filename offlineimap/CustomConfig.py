@@ -51,7 +51,7 @@ class CustomConfigParser(SafeConfigParser):
     def getmetadatadir(self):
         metadatadir = os.path.expanduser(self.getdefault("general", "metadata", "~/.offlineimap"))
         if not os.path.exists(metadatadir):
-            os.mkdir(metadatadir, 0o700)
+            os.makedirs(metadatadir, 0o700)
         return metadatadir
 
     def getlocaleval(self):
