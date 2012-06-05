@@ -108,8 +108,12 @@ class GridFSFolder(BaseFolder):
         else:
             ccAddress = None
 
-        sent = msg['Date']
-        sent = dateutil.parser.parse(sent)
+        sent = msg['Date'] if msg.has_key('Date') else None
+        if sent is not None:
+            try:
+                sent = dateutil.parser.parse(sent)
+            except ex:
+                pass
 
         obj = {
             'uid': uid,
