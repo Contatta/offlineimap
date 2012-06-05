@@ -113,7 +113,7 @@ class GridFSFolder(BaseFolder):
         sent_date = msg['Date'] if msg.has_key('Date') else None
         if sent_date is not None:
             try:
-                sent = dateutil.parser.parse(sent_date, fuzzy=true)
+                sent = dateutil.parser.parse(sent_date, fuzzy=True)
             except Exception:
                 self.ui.warn("Processing message %s [acc: %s]:\n Date not valid, value: %s" %\
                                               (uid, self.accountname, sent_date))
