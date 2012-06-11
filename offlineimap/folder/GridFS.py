@@ -26,8 +26,12 @@ from email.parser import Parser
 import dateutil.parser
 import email
 import time
+from datetime import datetime
 
 class GridFSFolder(BaseFolder):
+
+    MODIFY_DATE_KEY = 'modifyDate'
+
     def __init__(self, db, gfs, files, name, repository):
         """
 
@@ -76,7 +80,8 @@ class GridFSFolder(BaseFolder):
 
     def getmessagetime(self, uid):
         file = self._gfs.get_last_version(uid=uid)
-        return time.mktime(file.upload_date.timetuple())
+        modifyDate = file.modifyDate
+        return time.mktime(modifyDate.utctimetuple())
 
     def addressToList(self, address):
         addresslist = email.utils.getaddresses([address])
@@ -122,8 +127,8 @@ class GridFSFolder(BaseFolder):
             'uid': uid,
             'type': 'M',
             'flags': [flag for flag in flags],
-            #'rtime': rtime,
-            'filename': self.name + unicode(uid),
+            GridFSFolder.MODIFY_DATE_KEY: datetime.utcnow(),
+            'filename': self.format_file_name(uid),
             'path': self.name,
             'accountname': self.accountname,
 
@@ -149,14 +154,25 @@ class GridFSFolder(BaseFolder):
 
     def savemessageflags(self, uid, flags):
         id = self.messagelist[uid]['_id']
-        self._files.update({'_id' : id}, { '$set': { 'flags': [flag for flag in flags]}})
+        self._files.update({'_id' : id}, { '$set': { 'flags': [flag for flag in flags], GridFSFolder.MODIFY_DATE_KEY: datetime.utcnow() }})
 
     def change_message_uid(self, uid, new_uid):
         msg = self.messagelist[uid]
         id = msg['_id']
-        self._files.update({'_id' : id}, { '$set': { 'uid': new_uid } })
+        self._files.update({'_id' : id}, { '$set': { 'filename': self.format_file_name(new_uid), 'uid': new_uid, GridFSFolder.MODIFY_DATE_KEY: datetime.utcnow() } })
         self.messagelist[new_uid] = msg
         del(self.messagelist[uid])
+
+    def format_file_name(self, uid):
+        """
+        Generates a mail-dir style file name
+
+        @param uid: unique message identifier
+        @type uid: string
+        @return: formatted file name
+        @rtype: string
+        """
+        return '{0}/{1}/{2}'.format(self.accountname, self.name, unicode(uid))
 
     def deletemessage(self, uid):
         if not self.uidexists(uid):
