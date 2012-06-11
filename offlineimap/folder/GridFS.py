@@ -155,6 +155,7 @@ class GridFSFolder(BaseFolder):
     def savemessageflags(self, uid, flags):
         id = self.messagelist[uid]['_id']
         self._files.update({'_id' : id}, { '$set': { 'flags': [flag for flag in flags], GridFSFolder.MODIFY_DATE_KEY: datetime.utcnow() }})
+        self.messagelist[uid]['flags'] = flags
 
     def change_message_uid(self, uid, new_uid):
         msg = self.messagelist[uid]
