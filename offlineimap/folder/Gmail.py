@@ -40,3 +40,12 @@ class GmailFolder(IMAPFolder):
         self.trash_folder = repository.gettrashfolder(name)
         # Gmail will really delete messages upon EXPUNGE in these folders
         self.real_delete_folders =  [ self.trash_folder, repository.getspamfolder() ]
+
+    def savemessage(self, uid, content, flags, rtime):
+        new_uid = super(GmailFolder, self).savemessage(uid, content, flags, rtime)
+
+        # Gmail does not store the Seen flag when copying a new message to the server
+        if 'S' in flags:
+            self.savemessageflags(new_uid, flags)
+
+        return new_uid
