@@ -116,6 +116,7 @@ class GridFSFolder(BaseFolder):
 
         sent = None
         sent_date = msg['Date'] if msg.has_key('Date') else None
+        messageid = msg['Message-Id'] if msg.has_key('Message-Id') else None
         if sent_date is not None:
             try:
                 sent = dateutil.parser.parse(sent_date, fuzzy=True)
@@ -138,7 +139,8 @@ class GridFSFolder(BaseFolder):
                 'from': fromAddress,
                 'date': sent,
                 'to': toAddress,
-                'cc': ccAddress
+                'cc': ccAddress,
+                'messageid':messageid
             }
         }
 
