@@ -73,13 +73,15 @@ class GridFSFolder(BaseFolder):
         return self.messagelist
 
     def getmessage(self, uid):
-        file = self._gfs.get_last_version(uid=uid)
+        id = self.messagelist[uid]['_id']
+        file = self._gfs.get(id)
         retval = file.read()
         file.close()
         return retval
 
     def getmessagetime(self, uid):
-        file = self._gfs.get_last_version(uid=uid)
+        id = self.messagelist[uid]['_id']
+        file = self._gfs.get(id)
         modifyDate = file.modifyDate
         return time.mktime(modifyDate.utctimetuple())
 
@@ -132,6 +134,7 @@ class GridFSFolder(BaseFolder):
             'filename': self.format_file_name(uid),
             'path': self.name,
             'accountname': self.accountname,
+            'remotePath' : self.name,           # used to determine if message has been moved folders
 
             # mail specific metadata
             'mailHeaders' : {
@@ -162,7 +165,7 @@ class GridFSFolder(BaseFolder):
     def change_message_uid(self, uid, new_uid):
         msg = self.messagelist[uid]
         id = msg['_id']
-        self._files.update({'_id' : id}, { '$set': { 'filename': self.format_file_name(new_uid), 'uid': new_uid, GridFSFolder.MODIFY_DATE_KEY: datetime.utcnow() } })
+        self._files.update({'_id' : id}, { '$set': { 'filename': self.format_file_name(new_uid), 'uid': new_uid, 'remotePath': self.name, GridFSFolder.MODIFY_DATE_KEY: datetime.utcnow() } })
         self.messagelist[new_uid] = msg
         del(self.messagelist[uid])
 
@@ -199,9 +202,15 @@ class GridFSFolder(BaseFolder):
 
         retval = {}
 
+        moved_uid=-1
         files = self._files.find({'accountname':self.accountname, 'path':self.name, 'type':'M'})
         for file in files:
-            retval[file['uid']] = { 'flags': set(file['flags']), '_id' : file['_id'] }
+            if file['remotePath'] != self.name:
+                uid = moved_uid
+                moved_uid -= 1                      # assign negative UID to force upload
+            else:
+                uid = file['uid']
+            retval[uid] = { 'flags': set(file['flags']), '_id' : file['_id'] }
 
         return retval
 

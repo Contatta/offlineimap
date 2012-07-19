@@ -158,7 +158,7 @@ class GridFSRepository(BaseRepository):
         """
 
         retval = []
-        files = self._files.find({ 'type': 'D' })
+        files = self._files.find({ 'accountname':self.accountname, 'type': 'D' })
         for file in files:
             retval.append(GridFSFolder(self._db, self._gfs, self._files, file['path'], self))
 
